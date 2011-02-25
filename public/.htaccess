@@ -1,0 +1,60 @@
+#prepisovani adres podle pozadavku
+RewriteEngine On
+
+#
+# uzivatel
+#
+
+#prihlaseni uzivatele
+RewriteRule ^user/signin /user_signin.php [L]
+
+#vytvoreni uzivatele
+RewriteRule ^user/([[:alnum:]]*)/post /user_post.php?user[username]=$1 [L,QSA]
+
+#smazani uzivatele
+RewriteRule ^user/([[:alnum:]]*)/delete /user_delete.php?user[username]=$1 [L]
+
+#update informaci o uzivateli
+RewriteRule ^user/([[:alnum:]]*)/put /user_put.php?user[username]=$1 [L,QSA]
+
+#ziskani informaci o uzivateli
+RewriteRule ^user/?.?([[:alnum:]]*)$ /user_get.php?user[id]=0&format=$1 [L,QSA]
+RewriteRule ^user/([[:digit:]]*)(\.)?([[:alnum:]]*)$ /user_get.php?user[id]=$1&format=$3 [L]
+RewriteRule ^user/([[:alnum:]]*)(\.)?([[:alnum:]]*)$ /user_get.php?user[username]=$1&format=$3
+
+#
+# pristup k adresarum
+#
+
+#pozadavek na vypis adresare GET (bez pozadovaneho formatu a s pozadovanym formatem)
+RewriteRule ^directory/([[:digit:]]+)(_[[:alnum:]]+)?$ /directory_get.php?directory_id=$1
+RewriteRule ^directory/([[:digit:]]+)(_[[:alnum:]]+)?\.([[:alnum:]]+)$ /directory_get.php?directory_id=$1&format=$3 [L]
+
+#pozadavek na vytvoreni adresare POST
+RewriteRule ^directory/([[:digit:]]+)(_[[:alnum:]]+)?/post$ /directory_post.php?directory_id=$1 [L,QSA]
+
+#pozadavek na update adresare DELETE
+RewriteRule ^directory/([[:digit:]]+)(_[[:alnum:]]+)?/delete$ /directory_delete.php?directory_id=$1 [L]
+
+#pozadavek na update adresare PUT
+RewriteRule  ^directory/([[:digit:]].*)(_[[:alnum:]]*)?/put$ /directory_put.php?directory_id=$1 [L]
+
+#
+# pristup k souborum
+#
+
+#vytvoreni souboru
+RewriteRule ^document/post(\.?)([[:alnum:]]*) /document_post.php?format=$2
+
+#update souboru
+RewriteRule ^document/([[:alnum:]]{40})(_.*)?\.?([[:alnum:]]+)?/put$ /document_put.php?shortcut=&uuid=$1 [L,QSA]
+RewriteRule ^document/([[:alnum:]]{7})(_.*)?\.?([[:alnum:]]+)?/put$ /document_put.php?shortcut=$1&uuid= [L,QSA]
+
+#informace o souboru
+RewriteRule ^document/([[:alnum:]]{40})(_.*)?\.([[:alnum:]]+)?$ /document_get.php?shortcut=&uuid=$1&format=$3 [L]
+RewriteRule ^document/([[:alnum:]]{40})(_.*)?\.?([[:alnum:]]+)?$ /document_get.php?shortcut=&uuid=$1&format=$3 [L]
+RewriteRule ^document/([[:alnum:]]{7})(_.*)?\.?([[:alnum:]]+)?$ /document_get.php?shortcut=$1&uuid=&format=$3 [L]
+
+#stažení souboru
+RewriteRule ^document/get/([[:alnum:]]{40})(_.*)?\.?([[:alnum:]]+)?$ /document_download.php?shortcut=&uuid=$1 [L]
+RewriteRule ^document/get/([[:alnum:]]{7})(_.*)?\.?([[:alnum:]]+)?$ /document_download.php?shortcut=$1&uuid= [L]
