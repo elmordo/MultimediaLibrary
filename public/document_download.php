@@ -51,13 +51,13 @@ if (!$permisions->read) {
 }
 
 //nacteni obsahu dokumentu
-$content = file_get_contents(PATH_CONTENTS.$document->uuid);
+$contentFileName = PATH_CONTENTS.$document->uuid;
 
 //odeslani hlavicek
 header("Content-Type: ".$document->mime_type);
-header("Content-Length: ".strlen($content));
+header("Content-Length: ".  filesize($contentFileName));
 header("Content-Transfer-Encoding: binary");
 header("Content-Disposition: inline; filename=$document->document_name");
 
-print $content;
+print @readfile($contentFileName);
 ?>
