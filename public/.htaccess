@@ -5,6 +5,9 @@ RewriteEngine On
 # uzivatel
 #
 
+#vypsani seznamu uzivatelu
+RewriteRule ^users/?(?:(?:\.)([[:alnum:]]*))?$ /users_list.php?format=$1 [L]
+
 #prihlaseni uzivatele
 RewriteRule ^user/signin /user_signin.php [L]
 
