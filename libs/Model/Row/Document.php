@@ -104,9 +104,14 @@ class Model_Row_Document extends Zend_Db_Table_Row_Abstract {
 	//ulozeni zmen tohoto dokumentu
 	parent::save();
 
-	return $this->uuid;
+	return $newRow->uuid;
     }
 
+    /**
+     * vraci zkratkove uuid dokumentu
+     *
+     * @return string
+     */
     public function shortcut() {
 	$tableShortcuts = new Model_DocumentsShortcuts();
 
@@ -117,6 +122,77 @@ class Model_Row_Document extends Zend_Db_Table_Row_Abstract {
 	    return false;
 	else
 	    return $shortcut->shortcut;
+    }
+
+    /**
+     * najde puvodni verzi dokumentu
+     *
+     * @return Model_Row_Document
+     */
+    public function findFirstDocument() {
+        //nalezeni v historii zaznamu, kde je tento dokument oznacen jako document_new_uuid
+        $historyRecord = $this->_findInHistory("document_new_uuid");
+
+        //pokud nebyl nalzene zadny zaznam znamena to, ze tento dokument je prvni v historii
+        if (!$historyRecord) {
+            return $this;
+        }
+
+        //nalezeni prvniho dokumentu
+        return $historyRecord->findParentRow($this->_table, "first");
+    }
+
+    /**
+     * najde aktualni verzi dokumentu
+     *
+     * @return Model_Row_Document
+     */
+    public function findLastDocument() {
+        //nalezeni v historii zaznamu, kde je tento dokument oznacen jako document_old_uuid
+        $historyRecord = $this->_findInHistory("document_old_uuid");
+
+        //pokud nebyl nalzene zadny zaznam znamena to, ze tento dokument je aktualni verze
+        if (!$historyRecord) {
+            return $this;
+        }
+
+        //nalezeni aktualni verze
+        return $historyRecord->findParentRow($this->_table, "last");
+    }
+
+    /**
+     * vraci predchozi dokument v historii
+     *
+     * @return Model_Row_Document
+     */
+    public function findPreviousDocument() {
+        //nalezeni v historii zaznamu, kde je tento dokument oznacen jako document_old_uuid
+        $historyRecord = $this->_findInHistory("document_old_uuid");
+
+        //pokud nebyl nalzene zadny zaznam znamena to, ze tento dokument je aktualni verze
+        if (!$historyRecord) {
+            return null;
+        }
+
+        return $historyRecord->findParentRow($this->_table, "old");
+    }
+
+    /**
+     * vraci nasledujici revizi dokumentu
+     *
+     * @return Model_Row_Document
+     */
+    public function findNextDocument() {
+        //pokud je dokument aktualni verze, vraci se NULL
+        if ($this->is_latest)
+                return null;
+
+        $history = $this->_findInHistory("document_old_uuid");
+
+        if (!$history)
+            return null;
+
+        return $history->findParentRow($this->_table, "new");
     }
 
     /**
@@ -184,6 +260,32 @@ class Model_Row_Document extends Zend_Db_Table_Row_Abstract {
 	$history->save();
 
 	return $this;
+    }
+
+    /**
+     * najde v historii zaznam podle pozadovaneho kriteria
+     *
+     * @staticvar Model_DocumentsHistory $tableHistory tabulka historie
+     * @param string $ruleKey klicovy sloupec podle ktereho hledat
+     * @return Model_Row_Document
+     */
+    protected function _findInHistory($ruleKey) {
+        //nalezeni v historii zaznamu, kde je tento dokument oznacen jako document_old_uuid
+
+        /**
+         * @var Model_DocumentsHistory
+         */
+        static $tableHistory;
+
+        //kontrola inicializace reprezentace tabulky
+        if (!$tableHistory)
+            $tableHistory  = new Model_DocumentsHistory();
+
+        //nacteni zaznamu
+        $historyRecord = $tableHistory->fetchRow($tableHistory->select(false)
+                ->where("$ruleKey like ?", $this->uuid));
+
+        return $historyRecord;
     }
 }
 ?>
